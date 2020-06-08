@@ -7,14 +7,26 @@ import datetime
 import urllib.request as getBy_urllib
 import requests,ssl,socket
 import http.client as getBy_httpclient
-import threading
+import threading,subprocess 
 import matplotlib.pyplot as plt
-global listaURLLIB,listaHTTPCLIENT,listaAPI,listaSOCKET,contadorgrafico
+global listaSCAPY,listaURLLIB,listaHTTPCLIENT,listaAPI,listaSOCKET,contadorgrafico
 listaURLLIB=list()
 listaAPI=list()
 listaHTTPCLIENT=list()
 listaSOCKET=list()
+listaSCAPY=list()
 contadorgrafico=0
+
+
+#def funcionScapy():
+#    #python scapyTLS1_2_final_python2_7.py api.tidex.com /api/3/ticker/eth_btc 2>/dev/null
+#    out=subprocess.Popen(['python', 'scapyTLS1_2_final_python2_7.py', 'api.tidex.com','/api/3/ticker/eth_btc','2>/dev/null'], stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
+#    stdout,stderr = out.communicate()
+#    salidascapy=str(stdout, 'utf-8')
+#    response_Scapy=salidascapy.split('why)')[1]
+#    json_scapy=json.loads(response_Scapy) 
+#    print(json_scapy)
+#funcionScapy()
 
 class Fetch4MethodGET():
     def __init__(self):
@@ -67,6 +79,18 @@ class Fetch4MethodGET():
         listaSOCKET.append(bodysocket_response)
 #        print(bodysocket_response)
 #        return bodysocket_response
+        
+    def funcionScapy(self):
+        global listaSCAPY
+        #python scapyTLS1_2_final_python2_7.py api.tidex.com /api/3/ticker/eth_btc 2>/dev/null
+        out=subprocess.Popen(['python', 'scapyTLS1_2_final_python2_7.py', 'api.tidex.com','/api/3/ticker/eth_btc','2>/dev/null'], stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
+        stdout,stderr = out.communicate()
+        salidascapy=str(stdout, 'utf-8')
+        response_Scapy=salidascapy.split('why)')[1]
+        json_scapy=json.loads(response_Scapy) 
+        listaSCAPY.append(json_scapy)
+        print('SCAPY',response_Scapy)
+#        return json_scapy
     
 
 
@@ -84,16 +108,19 @@ class APP():
         self.label2 = tk.Label(text="Method module socket ssl", font=('Helvetica', 22), fg='blue')
         self.label3 = tk.Label(text="Method module urllib", font=('Helvetica', 22), fg='blue')
         self.label4 = tk.Label(text="Method module http.client", font=('Helvetica', 22), fg='blue')
+        self.label5 = tk.Label(text="Method module scapy tls", font=('Helvetica', 22), fg='blue')
         self.labelAVG= tk.Label(text='AVG Sell & Buy', font=('Helvetica', 22), fg='black')
         self.labelUpdate= tk.Label(text='query Time', font=('Helvetica', 22), fg='black')
         self.lavg1 = tk.Label(text='')
         self.lavg2 = tk.Label(text='')
         self.lavg3 = tk.Label(text='')
         self.lavg4 = tk.Label(text='')
+        self.lavg5 = tk.Label(text='',font=('Helvetica', 11), fg='black')
         self.ltime1 = tk.Label(text='')
         self.ltime2 = tk.Label(text='')
         self.ltime3 = tk.Label(text='')
         self.ltime4 = tk.Label(text='')
+        self.ltime5 = tk.Label(text='',font=('Helvetica', 11), fg='black')
         
         self.lactualWin = tk.Label(text='Winnerxxxx',font=('Helvetica', 32), fg='green')
         
@@ -102,6 +129,7 @@ class APP():
         self.label2.place(x=1,y=200)
         self.label3.place(x=1,y=240)
         self.label4.place(x=1,y=280)
+        self.label5.place(x=1,y=320)
         self.label.place(x=3,y=2)
         self.labelAVG.place(x=400,y=120)
         self.labelUpdate.place(x=630,y=120)
@@ -109,10 +137,12 @@ class APP():
         self.lavg2.place(x=400,y=200)
         self.lavg3.place(x=400,y=240)
         self.lavg4.place(x=400,y=280)
+        self.lavg5.place(x=400,y=320)
         self.ltime1.place(x=630,y=160)
         self.ltime2.place(x=630,y=200)
         self.ltime3.place(x=630,y=240)
         self.ltime4.place(x=630,y=280)
+        self.ltime5.place(x=630,y=320)
         self.lactualWin.place(x=200,y=380)
         
         
@@ -122,7 +152,7 @@ class APP():
         self.root.mainloop()
 
     def fetchdata(self):
-        global listaURLLIB,listaHTTPCLIENT,listaAPI,listaSOCKET,contadorgrafico
+        global listaURLLIB,listaHTTPCLIENT,listaAPI,listaSOCKET,contadorgrafico,listaSCAPY
         now = 'Linux Local Time -> '+time.strftime("%H:%M:%S")
         self.label.configure(text=now)
         
@@ -131,10 +161,13 @@ class APP():
         b=threading.Thread(target=instancia.funcionSocket ,args=())
         c=threading.Thread(target=instancia.funcionURLlibrequest ,args=())
         d=threading.Thread(target=instancia.funcionHTTPclient ,args=())
+        e=threading.Thread(target=instancia.funcionScapy ,args=())
+        e.start()
         a.start()
         b.start()
         c.start()
         d.start()
+        e.join()
         d.join()
         c.join()
         b.join()
@@ -181,7 +214,7 @@ class APP():
             self.ltime4.configure(font=('Helvetica', 12), fg='black')
          
             
-            if contadorgrafico >=20:
+            if contadorgrafico >=4:
                 contadorgrafico =0
 #                plt.ion()
                 plt.xlabel('Muestras')
@@ -194,13 +227,16 @@ class APP():
                 yy3=[apiss['eth_btc']['buy'] for apiss in listaURLLIB ]
                 xx4=[apiss['eth_btc']['updated'] for apiss in listaHTTPCLIENT ]
                 yy4=[apiss['eth_btc']['buy'] for apiss in listaHTTPCLIENT ]
+                xx5=[apiss['eth_btc']['updated'] for apiss in listaSCAPY ]
+                yy5=[apiss['eth_btc']['buy'] for apiss in listaSCAPY ]
 #                plt.plot(xx, yy, 'r--',xx, yy,'b--')
                 plt.suptitle('Cuendo finalice de ver la grafica cierre "X" para continuar la consulta')
                 red_dot, = plt.plot([(datetime.datetime.fromtimestamp(xxx1)) for xxx1 in xx1],yy1, "r*-", markersize=5)
-                black_cross, = plt.plot([(datetime.datetime.fromtimestamp(xxx2)) for xxx2 in xx2],yy2, "bx-", markeredgewidth=3, markersize=8)
+                black_cross, = plt.plot([(datetime.datetime.fromtimestamp(xxx2)) for xxx2 in xx2],yy2, "kx-", markeredgewidth=3, markersize=8)
                 blue_cross, = plt.plot([(datetime.datetime.fromtimestamp(xxx3)) for xxx3 in xx3],yy3, "b*-", markeredgewidth=3, markersize=8)
                 green_cross, = plt.plot([(datetime.datetime.fromtimestamp(xxx4)) for xxx4 in xx4],yy4, "g+-", markeredgewidth=3, markersize=8)
-                plt.legend([red_dot, black_cross, blue_cross,green_cross], ["APIreq", "SocketCall","URLlib","http.client"])
+                green2_cross, = plt.plot([(datetime.datetime.fromtimestamp(xxx5)) for xxx5 in xx5],yy5, "c--", markeredgewidth=2, markersize=5)
+                plt.legend([red_dot, black_cross, blue_cross,green_cross,green2_cross], ["APIreq", "SocketCall","URLlib","http.client","scapy"])
                 plt.show()
                 
  
@@ -215,20 +251,23 @@ class APP():
         self.ltime2.configure(text=datetime.datetime.fromtimestamp(listaSOCKET[-1]['eth_btc']['updated']).strftime("%H:%M:%S"))
         self.ltime3.configure(text=datetime.datetime.fromtimestamp(listaURLLIB[-1]['eth_btc']['updated']).strftime("%H:%M:%S"))
         self.ltime4.configure(text=datetime.datetime.fromtimestamp(listaHTTPCLIENT[-1]['eth_btc']['updated']).strftime("%H:%M:%S"))
+        self.ltime5.configure(text=datetime.datetime.fromtimestamp(listaSCAPY[-1]['eth_btc']['updated']).strftime("%H:%M:%S"))
         
         self.lavg1.configure(text=str(0.5*(listaAPI[-1]['eth_btc']['buy']+listaAPI[-1]['eth_btc']['sell'])))
         self.lavg2.configure(text=str(0.5*(listaSOCKET[-1]['eth_btc']['buy']+listaSOCKET[-1]['eth_btc']['sell'])))
         self.lavg3.configure(text=str(0.5*(listaURLLIB[-1]['eth_btc']['buy']+listaURLLIB[-1]['eth_btc']['sell'])))
         self.lavg4.configure(text=str(0.5*(listaHTTPCLIENT[-1]['eth_btc']['buy']+listaHTTPCLIENT[-1]['eth_btc']['sell'])))
+        self.lavg5.configure(text=str(0.5*(listaSCAPY[-1]['eth_btc']['buy']+listaHTTPCLIENT[-1]['eth_btc']['sell'])))
         
         
         
         
     def update_clock(self):
-        global contadorgrafico
+        global contadorgrafico#,listaSCAPY
         contadorgrafico+=1
         self.fetchdata()
-        self.root.after(2000, self.update_clock)
+#        print(listaSCAPY[-1])
+        self.root.after(1000, self.update_clock)
 
 app=APP()
 

@@ -9,7 +9,7 @@ Created on Sat Jun  6 14:14:13 2020
 import json,copy
 import time
 import urllib.request as getBy_urllib
-import requests,ssl,socket
+import requests,ssl,socket,subprocess
 import http.client as getBy_httpclient
 
 
@@ -52,10 +52,19 @@ class Fetch4MethodGET():
         bodysocket_response=json.loads(ere) 
         return bodysocket_response
     
+    def funcionScapy(self):
+        #python scapyTLS1_2_final_python2_7.py api.tidex.com /api/3/ticker/eth_btc 2>/dev/null
+        out=subprocess.Popen(['python', 'scapyTLS1_2_final_python2_7.py', 'api.tidex.com','/api/3/ticker/eth_btc','2>/dev/null'], stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
+        stdout,stderr = out.communicate()
+        salidascapy=str(stdout, 'utf-8')
+        response_Scapy=salidascapy.split('why)')[1]
+        json_scapy=json.loads(response_Scapy) 
+        return json_scapy
+
 
 instancia=Fetch4MethodGET()    
 
-result=[instancia.funcionAPIrequest(),instancia.funcionHTTPclient(),instancia.funcionSocket(),instancia.funcionURLlibrequest()]
+result=[instancia.funcionAPIrequest(),instancia.funcionHTTPclient(),instancia.funcionSocket(),instancia.funcionURLlibrequest(),instancia.funcionScapy()]
 
 print(result)
 
